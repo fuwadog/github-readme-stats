@@ -5,6 +5,31 @@ import { getCardColors } from "./color.js";
 import { encodeHTML } from "./html.js";
 import { clampValue } from "./ops.js";
 
+const CHARACTER_WIDTHS = [
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0.2796875, 0.2765625, 0.3546875, 0.5546875, 0.5546875,
+  0.8890625, 0.665625, 0.190625, 0.3328125, 0.3328125, 0.3890625, 0.5828125,
+  0.2765625, 0.3328125, 0.2765625, 0.3015625, 0.5546875, 0.5546875, 0.5546875,
+  0.5546875, 0.5546875, 0.5546875, 0.5546875, 0.5546875, 0.5546875, 0.5546875,
+  0.2765625, 0.2765625, 0.584375, 0.5828125, 0.584375, 0.5546875, 1.0140625,
+  0.665625, 0.665625, 0.721875, 0.721875, 0.665625, 0.609375, 0.7765625,
+  0.721875, 0.2765625, 0.5, 0.665625, 0.5546875, 0.8328125, 0.721875, 0.7765625,
+  0.665625, 0.7765625, 0.721875, 0.665625, 0.609375, 0.721875, 0.665625,
+  0.94375, 0.665625, 0.665625, 0.609375, 0.2765625, 0.3546875, 0.2765625,
+  0.4765625, 0.5546875, 0.3328125, 0.5546875, 0.5546875, 0.5, 0.5546875,
+  0.5546875, 0.2765625, 0.5546875, 0.5546875, 0.221875, 0.240625, 0.5, 0.221875,
+  0.8328125, 0.5546875, 0.5546875, 0.5546875, 0.5546875, 0.3328125, 0.5,
+  0.2765625, 0.5546875, 0.5, 0.721875, 0.5, 0.5, 0.5, 0.3546875, 0.259375,
+  0.353125, 0.5890625,
+];
+
+const CHAR_WIDTH_AVG = 0.5279276315789471;
+
+const ERROR_CARD_LENGTH = 576.5;
+
+const ERROR_CARD_URL =
+  process.env.ERROR_CARD_URL || "https://tiny.one/readme-stats";
+
 /**
  * Auto layout utility, allows us to layout things vertically or horizontally with
  * proper gaping.
@@ -115,9 +140,6 @@ const iconWithLabel = (icon, label, testid, iconSize) => {
   return flexLayout({ items: [iconSvg, text], gap: 20 }).join("");
 };
 
-// Script parameters.
-const ERROR_CARD_LENGTH = 576.5;
-
 const UPSTREAM_API_ERRORS = [
   TRY_AGAIN_LATER,
   SECONDARY_ERROR_MESSAGES.MAX_RETRY,
@@ -176,7 +198,7 @@ const renderError = ({
     <text x="25" y="45" class="text">Something went wrong!${
       UPSTREAM_API_ERRORS.includes(secondaryMessage) || !show_repo_link
         ? ""
-        : " file an issue at https://tiny.one/readme-stats"
+        : ` file an issue at ${ERROR_CARD_URL}`
     }</text>
     <text data-testid="message" x="25" y="55" class="text small">
       <tspan x="25" dy="18">${encodeHTML(message)}</tspan>
@@ -195,34 +217,13 @@ const renderError = ({
  * @returns {number} Text length.
  */
 const measureText = (str, fontSize = 10) => {
-  // prettier-ignore
-  const widths = [
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0.2796875, 0.2765625,
-    0.3546875, 0.5546875, 0.5546875, 0.8890625, 0.665625, 0.190625,
-    0.3328125, 0.3328125, 0.3890625, 0.5828125, 0.2765625, 0.3328125,
-    0.2765625, 0.3015625, 0.5546875, 0.5546875, 0.5546875, 0.5546875,
-    0.5546875, 0.5546875, 0.5546875, 0.5546875, 0.5546875, 0.5546875,
-    0.2765625, 0.2765625, 0.584375, 0.5828125, 0.584375, 0.5546875,
-    1.0140625, 0.665625, 0.665625, 0.721875, 0.721875, 0.665625,
-    0.609375, 0.7765625, 0.721875, 0.2765625, 0.5, 0.665625,
-    0.5546875, 0.8328125, 0.721875, 0.7765625, 0.665625, 0.7765625,
-    0.721875, 0.665625, 0.609375, 0.721875, 0.665625, 0.94375,
-    0.665625, 0.665625, 0.609375, 0.2765625, 0.3546875, 0.2765625,
-    0.4765625, 0.5546875, 0.3328125, 0.5546875, 0.5546875, 0.5,
-    0.5546875, 0.5546875, 0.2765625, 0.5546875, 0.5546875, 0.221875,
-    0.240625, 0.5, 0.221875, 0.8328125, 0.5546875, 0.5546875,
-    0.5546875, 0.5546875, 0.3328125, 0.5, 0.2765625, 0.5546875,
-    0.5, 0.721875, 0.5, 0.5, 0.5, 0.3546875, 0.259375, 0.353125, 0.5890625,
-  ];
-
-  const avg = 0.5279276315789471;
   return (
     str
       .split("")
       .map((c) =>
-        c.charCodeAt(0) < widths.length ? widths[c.charCodeAt(0)] : avg,
+        c.charCodeAt(0) < CHARACTER_WIDTHS.length
+          ? CHARACTER_WIDTHS[c.charCodeAt(0)]
+          : CHAR_WIDTH_AVG,
       )
       .reduce((cur, acc) => acc + cur) * fontSize
   );
@@ -230,6 +231,7 @@ const measureText = (str, fontSize = 10) => {
 
 export {
   ERROR_CARD_LENGTH,
+  ERROR_CARD_URL,
   renderError,
   createLanguageNode,
   createProgressNode,

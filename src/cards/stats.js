@@ -18,11 +18,11 @@ const RANK_ONLY_CARD_MIN_WIDTH = 290;
 const RANK_ONLY_CARD_DEFAULT_WIDTH = 290;
 
 /**
- * Long locales that need more space for text. Keep sorted alphabetically.
+ * Long locales that need more space for text.
  *
- * @type {(keyof typeof wakatimeCardLocales["wakatimecard.title"])[]}
+ * @type {Set<string>}
  */
-const LONG_LOCALES = [
+const LONG_LOCALES = new Set([
   "az",
   "bg",
   "cs",
@@ -49,7 +49,7 @@ const LONG_LOCALES = [
   "uk-ua",
   "uz",
   "zh-tw",
-];
+]);
 
 /**
  * Create a stats card text item.
@@ -410,7 +410,7 @@ const renderStatsCard = (stats, options = {}) => {
   };
 
   // @ts-ignore
-  const isLongLocale = locale ? LONG_LOCALES.includes(locale) : false;
+  const isLongLocale = locale ? LONG_LOCALES.has(locale) : false;
 
   // filter out hidden stats defined by user & create the text nodes
   const statItems = Object.keys(STATS)
