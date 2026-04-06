@@ -1,7 +1,7 @@
 // @ts-check
 
 import { renderError } from "../src/common/render.js";
-import { isLocaleAvailable } from "../src/translations.js";
+import { isLocaleAvailable, isThemeAvailable } from "../src/translations.js";
 import { renderGistCard } from "../src/cards/gist.js";
 import { fetchGist } from "../src/fetchers/gist.js";
 import {
@@ -57,6 +57,22 @@ export default async (req, res) => {
       renderError({
         message: "Something went wrong",
         secondaryMessage: "Language not found",
+        renderOptions: {
+          title_color,
+          text_color,
+          bg_color,
+          border_color,
+          theme,
+        },
+      }),
+    );
+  }
+
+  if (theme && !isThemeAvailable(theme)) {
+    return res.send(
+      renderError({
+        message: "Something went wrong",
+        secondaryMessage: "Theme not found",
         renderOptions: {
           title_color,
           text_color,

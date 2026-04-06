@@ -1,6 +1,7 @@
 // @ts-check
 
 import { encodeHTML } from "./common/html.js";
+import { themes } from "../themes/index.js";
 
 /**
  * Retrieves stat card labels in the available locales.
@@ -1095,9 +1096,14 @@ const isLocaleAvailable = (locale) => {
   return availableLocales.includes(locale.toLowerCase());
 };
 
+const isThemeAvailable = (theme) => {
+  return Object.keys(themes).includes(theme);
+};
+
 export {
   availableLocales,
   isLocaleAvailable,
+  isThemeAvailable,
   langCardLocales,
   repoCardLocales,
   statCardLocales,

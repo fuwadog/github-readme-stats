@@ -165,7 +165,10 @@ class Card {
             gradientUnits="userSpaceOnUse"
           >
             ${gradients.map((grad, index) => {
-              let offset = (index * 100) / (gradients.length - 1);
+              let offset =
+                gradients.length > 1
+                  ? (index * 100) / (gradients.length - 1)
+                  : 0;
               return `<stop offset="${offset}%" stop-color="#${grad}" />`;
             })}
           </linearGradient>

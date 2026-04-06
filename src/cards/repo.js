@@ -59,10 +59,11 @@ const renderRepoCard = (repo, options = {}) => {
     nameWithOwner,
     description,
     primaryLanguage,
-    isArchived,
-    isTemplate,
+    isArchived = false,
+    isTemplate = false,
     starCount,
     forkCount,
+    stargazers,
   } = repo;
   const {
     hide_border = false,
@@ -79,7 +80,7 @@ const renderRepoCard = (repo, options = {}) => {
   } = options;
 
   const lineHeight = 10;
-  const header = show_owner ? nameWithOwner : name;
+  const header = show_owner ? nameWithOwner || name : name || "Repository";
   const langName = (primaryLanguage && primaryLanguage.name) || "Unspecified";
   const langColor = (primaryLanguage && primaryLanguage.color) || "#333";
   const descriptionMaxLines = description_lines_count
@@ -123,8 +124,10 @@ const renderRepoCard = (repo, options = {}) => {
     ? createLanguageNode(langName, langColor)
     : "";
 
-  const totalStars = kFormatter(starCount);
-  const totalForks = kFormatter(forkCount);
+  const totalStars = kFormatter(
+    typeof starCount === "number" ? starCount : (stargazers?.totalCount ?? 0),
+  );
+  const totalForks = kFormatter(typeof forkCount === "number" ? forkCount : 0);
   const svgStars = iconWithLabel(
     icons.star,
     totalStars,

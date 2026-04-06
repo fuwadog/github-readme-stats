@@ -63,6 +63,8 @@ function calculateRank({
 
   const commitsMedian = all_commits ? COMMITS.allCommitsMedian : COMMITS.median;
 
+  const safeValue = (value, median) => (value === 0 ? 0 : value / median);
+
   const totalWeight =
     COMMITS.weight +
     PRS.weight +
@@ -73,12 +75,12 @@ function calculateRank({
 
   const rank =
     1 -
-    (COMMITS.weight * exponentialCdf(commits / commitsMedian) +
-      PRS.weight * exponentialCdf(prs / PRS.median) +
-      ISSUES.weight * exponentialCdf(issues / ISSUES.median) +
-      REVIEWS.weight * exponentialCdf(reviews / REVIEWS.median) +
-      STARS.weight * logNormalCdf(stars / STARS.median) +
-      FOLLOWERS.weight * logNormalCdf(followers / FOLLOWERS.median)) /
+    (COMMITS.weight * exponentialCdf(safeValue(commits, commitsMedian)) +
+      PRS.weight * exponentialCdf(safeValue(prs, PRS.median)) +
+      ISSUES.weight * exponentialCdf(safeValue(issues, ISSUES.median)) +
+      REVIEWS.weight * exponentialCdf(safeValue(reviews, REVIEWS.median)) +
+      STARS.weight * logNormalCdf(safeValue(stars, STARS.median)) +
+      FOLLOWERS.weight * logNormalCdf(safeValue(followers, FOLLOWERS.median))) /
       totalWeight;
 
   const percentile = Math.max(0, Math.min(100, rank * 100));

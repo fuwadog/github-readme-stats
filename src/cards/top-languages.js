@@ -171,7 +171,7 @@ const donutCenterTranslation = (totalLangs) => {
  * @returns {{ langs: Lang[], totalLanguageSize: number }} Trimmed top languages and total size.
  */
 const trimTopLanguages = (topLangs, langs_count, hide) => {
-  let langs = Object.values(topLangs);
+  let langs = Object.values(topLangs || {});
   let langsToHide = {};
   let langsCount = clampValue(langs_count, 1, MAXIMUM_LANGS_COUNT);
 
@@ -188,6 +188,9 @@ const trimTopLanguages = (topLangs, langs_count, hide) => {
   langs = langs
     .sort((a, b) => b.size - a.size)
     .filter((lang) => {
+      if (!lang?.name) {
+        return false;
+      }
       // @ts-ignore
       return !langsToHide[lowercaseTrim(lang.name)];
     })

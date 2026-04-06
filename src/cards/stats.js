@@ -297,7 +297,7 @@ const renderStatsCard = (stats, options = {}) => {
     show = [],
   } = options;
 
-  const lheight = parseInt(String(line_height), 10);
+  const lheight = parseInt(String(line_height ?? 25), 10);
 
   // returns theme based colors with proper overrides and defaults
   const { titleColor, iconColor, textColor, bgColor, borderColor, ringColor } =

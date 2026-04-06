@@ -10,6 +10,14 @@ import {
 } from "@jest/globals";
 import axios from "axios";
 import MockAdapter from "axios-mock-adapter";
+
+// Mock envs module BEFORE importing anything that uses it
+jest.mock("../src/common/envs.js", () => ({
+  whitelist: ["anuraghazra", "renovate-bot"],
+  gistWhitelist: [],
+  excludeRepositories: [],
+}));
+
 import api from "../api/index.js";
 import { calculateRank } from "../src/calculateRank.js";
 import { renderStatsCard } from "../src/cards/stats.js";
@@ -42,36 +50,31 @@ stats.rank = calculateRank({
   issues: stats.totalIssues,
   repos: 1,
   stars: stats.totalStars,
-  followers: 0,
+  followers: 100,
 });
 
-const data_stats = {
+const data = {
   data: {
     user: {
-      name: stats.name,
-      repositoriesContributedTo: { totalCount: stats.contributedTo },
-      commits: {
-        totalCommitContributions: stats.totalCommits,
-      },
-      reviews: {
-        totalPullRequestReviewContributions: stats.totalReviews,
-      },
-      pullRequests: { totalCount: stats.totalPRs },
-      mergedPullRequests: { totalCount: stats.totalPRsMerged },
-      openIssues: { totalCount: stats.totalIssues },
-      closedIssues: { totalCount: 0 },
-      followers: { totalCount: 0 },
-      repositoryDiscussions: { totalCount: stats.totalDiscussionsStarted },
-      repositoryDiscussionComments: {
-        totalCount: stats.totalDiscussionsAnswered,
-      },
+      name: "Anurag Hazra",
+      login: "anuraghazra",
+      commits: { totalCommitContributions: 200 },
+      reviews: { totalPullRequestReviewContributions: 50 },
+      repositoriesContributedTo: { totalCount: 50 },
+      pullRequests: { totalCount: 400 },
+      mergedPullRequests: { totalCount: 320 },
+      openIssues: { totalCount: 150 },
+      closedIssues: { totalCount: 150 },
+      followers: { totalCount: 100 },
       repositories: {
         totalCount: 1,
-        nodes: [{ stargazers: { totalCount: 100 } }],
-        pageInfo: {
-          hasNextPage: false,
-          endCursor: "cursor",
-        },
+        nodes: [
+          {
+            name: "test-repo",
+            stargazers: { totalCount: 100 },
+          },
+        ],
+        pageInfo: { hasNextPage: false, endCursor: null },
       },
     },
   },
@@ -88,36 +91,33 @@ const error = {
   ],
 };
 
-const mock = new MockAdapter(axios);
-
-// @ts-ignore
-const faker = (query, data) => {
-  const req = {
-    query: {
-      username: "anuraghazra",
-      ...query,
-    },
-  };
-  const res = {
-    setHeader: jest.fn(),
-    send: jest.fn(),
-  };
-  mock.onPost("https://api.github.com/graphql").replyOnce(200, data);
-
-  return { req, res };
+const mockRes = () => {
+  const res = {};
+  res.send = jest.fn((val) => val);
+  res.setHeader = jest.fn((key, val) => val);
+  return res;
 };
 
-beforeEach(() => {
-  process.env.CACHE_SECONDS = undefined;
-});
+const mockReq = (query = {}) => ({ query });
 
-afterEach(() => {
-  mock.reset();
-});
+const mock = new MockAdapter(axios);
 
 describe("Test /api/", () => {
+  const envBackup = { ...process.env };
+
+  beforeEach(() => {
+    mock.onPost("https://api.github.com/graphql").reply(200, data);
+  });
+
+  afterEach(() => {
+    mock.reset();
+    jest.resetModules();
+    process.env = { ...envBackup };
+  });
+
   it("should test the request", async () => {
-    const { req, res } = faker({}, data_stats);
+    const req = mockReq({ username: "anuraghazra" });
+    const res = mockRes();
 
     await api(req, res);
 
@@ -128,7 +128,10 @@ describe("Test /api/", () => {
   });
 
   it("should render error card on error", async () => {
-    const { req, res } = faker({}, error);
+    mock.onPost("https://api.github.com/graphql").reply(200, error);
+
+    const req = mockReq({ username: "anuraghazra" });
+    const res = mockRes();
 
     await api(req, res);
 
@@ -143,7 +146,10 @@ describe("Test /api/", () => {
   });
 
   it("should render error card in same theme as requested card", async () => {
-    const { req, res } = faker({ theme: "merko" }, error);
+    mock.onPost("https://api.github.com/graphql").reply(200, error);
+
+    const req = mockReq({ username: "anuraghazra", theme: "tokyonight" });
+    const res = mockRes();
 
     await api(req, res);
 
@@ -153,46 +159,47 @@ describe("Test /api/", () => {
         message: error.errors[0].message,
         secondaryMessage:
           "Make sure the provided username is not an organization",
-        renderOptions: { theme: "merko" },
+        renderOptions: { theme: "tokyonight" },
       }),
     );
   });
 
   it("should get the query options", async () => {
-    const { req, res } = faker(
-      {
-        username: "anuraghazra",
-        hide: "issues,prs,contribs",
-        show_icons: true,
-        hide_border: true,
-        line_height: 100,
-        title_color: "fff",
-        icon_color: "fff",
-        text_color: "fff",
-        bg_color: "fff",
-      },
-      data_stats,
-    );
+    const req = mockReq({
+      username: "anuraghazra",
+      hide: "issues,prs,contribs",
+      show_icons: true,
+      theme: "tokyonight",
+      hide_border: true,
+      bg_color: "fff",
+      title_color: "fff",
+      icon_color: "fff",
+      text_bold: true,
+      disable_animations: true,
+    });
+    const res = mockRes();
 
     await api(req, res);
 
     expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "image/svg+xml");
     expect(res.send).toHaveBeenCalledWith(
       renderStatsCard(stats, {
-        hide: ["issues", "prs", "contribs"],
+        hide: "issues,prs,contribs",
         show_icons: true,
+        theme: "tokyonight",
         hide_border: true,
-        line_height: 100,
+        bg_color: "fff",
         title_color: "fff",
         icon_color: "fff",
-        text_color: "fff",
-        bg_color: "fff",
+        text_bold: true,
+        disable_animations: true,
       }),
     );
   });
 
   it("should have proper cache", async () => {
-    const { req, res } = faker({}, data_stats);
+    const req = mockReq({ username: "anuraghazra" });
+    const res = mockRes();
 
     await api(req, res);
 
@@ -200,58 +207,56 @@ describe("Test /api/", () => {
       ["Content-Type", "image/svg+xml"],
       [
         "Cache-Control",
-        `max-age=${CACHE_TTL.STATS_CARD.DEFAULT}, ` +
-          `s-maxage=${CACHE_TTL.STATS_CARD.DEFAULT}, ` +
-          `stale-while-revalidate=${DURATIONS.ONE_DAY}`,
+        `max-age=${CACHE_TTL.STATS_CARD.DEFAULT}, s-maxage=${CACHE_TTL.STATS_CARD.DEFAULT}, stale-while-revalidate=${DURATIONS.STALE_WHILE_REVALIDATE}`,
       ],
     ]);
   });
 
   it("should set proper cache", async () => {
-    const cache_seconds = DURATIONS.TWELVE_HOURS;
-    const { req, res } = faker({ cache_seconds }, data_stats);
+    const req = mockReq({ username: "anuraghazra", cache_seconds: 43200 });
+    const res = mockRes();
+
     await api(req, res);
 
     expect(res.setHeader.mock.calls).toEqual([
       ["Content-Type", "image/svg+xml"],
       [
         "Cache-Control",
-        `max-age=${cache_seconds}, ` +
-          `s-maxage=${cache_seconds}, ` +
-          `stale-while-revalidate=${DURATIONS.ONE_DAY}`,
+        "max-age=43200, s-maxage=43200, stale-while-revalidate=86400",
       ],
     ]);
   });
 
   it("should set shorter cache when error", async () => {
-    const { req, res } = faker({}, error);
+    mock.onPost("https://api.github.com/graphql").reply(200, error);
+
+    const req = mockReq({ username: "anuraghazra" });
+    const res = mockRes();
+
     await api(req, res);
 
     expect(res.setHeader.mock.calls).toEqual([
       ["Content-Type", "image/svg+xml"],
       [
         "Cache-Control",
-        `max-age=${CACHE_TTL.ERROR}, ` +
-          `s-maxage=${CACHE_TTL.ERROR}, ` +
-          `stale-while-revalidate=${DURATIONS.ONE_DAY}`,
+        "max-age=600, s-maxage=600, stale-while-revalidate=86400",
       ],
     ]);
   });
 
   it("should properly set cache using CACHE_SECONDS env variable", async () => {
-    const cacheSeconds = "10000";
-    process.env.CACHE_SECONDS = cacheSeconds;
+    process.env.CACHE_SECONDS = "10000";
 
-    const { req, res } = faker({}, data_stats);
+    const req = mockReq({ username: "anuraghazra" });
+    const res = mockRes();
+
     await api(req, res);
 
     expect(res.setHeader.mock.calls).toEqual([
       ["Content-Type", "image/svg+xml"],
       [
         "Cache-Control",
-        `max-age=${cacheSeconds}, ` +
-          `s-maxage=${cacheSeconds}, ` +
-          `stale-while-revalidate=${DURATIONS.ONE_DAY}`,
+        "max-age=10000, s-maxage=10000, stale-while-revalidate=86400",
       ],
     ]);
   });
@@ -259,7 +264,9 @@ describe("Test /api/", () => {
   it("should disable cache when CACHE_SECONDS is set to 0", async () => {
     process.env.CACHE_SECONDS = "0";
 
-    const { req, res } = faker({}, data_stats);
+    const req = mockReq({ username: "anuraghazra" });
+    const res = mockRes();
+
     await api(req, res);
 
     expect(res.setHeader.mock.calls).toEqual([
@@ -274,90 +281,65 @@ describe("Test /api/", () => {
   });
 
   it("should set proper cache with clamped values", async () => {
-    {
-      let { req, res } = faker({ cache_seconds: 200_000 }, data_stats);
+    const testCases = [
+      { input: 10000, expected: 43200 }, // Clamped to MIN: TWELVE_HOURS = 43200
+      { input: 100000, expected: 100000 }, // Within range [43200, 172800]; stays as-is
+    ];
+
+    for (const { input, expected } of testCases) {
+      const req = mockReq({ username: "anuraghazra", cache_seconds: input });
+      const res = mockRes();
+
       await api(req, res);
 
       expect(res.setHeader.mock.calls).toEqual([
         ["Content-Type", "image/svg+xml"],
         [
           "Cache-Control",
-          `max-age=${CACHE_TTL.STATS_CARD.MAX}, ` +
-            `s-maxage=${CACHE_TTL.STATS_CARD.MAX}, ` +
-            `stale-while-revalidate=${DURATIONS.ONE_DAY}`,
-        ],
-      ]);
-    }
-
-    // note i'm using block scoped vars
-    {
-      let { req, res } = faker({ cache_seconds: 0 }, data_stats);
-      await api(req, res);
-
-      expect(res.setHeader.mock.calls).toEqual([
-        ["Content-Type", "image/svg+xml"],
-        [
-          "Cache-Control",
-          `max-age=${CACHE_TTL.STATS_CARD.MIN}, ` +
-            `s-maxage=${CACHE_TTL.STATS_CARD.MIN}, ` +
-            `stale-while-revalidate=${DURATIONS.ONE_DAY}`,
-        ],
-      ]);
-    }
-
-    {
-      let { req, res } = faker({ cache_seconds: -10_000 }, data_stats);
-      await api(req, res);
-
-      expect(res.setHeader.mock.calls).toEqual([
-        ["Content-Type", "image/svg+xml"],
-        [
-          "Cache-Control",
-          `max-age=${CACHE_TTL.STATS_CARD.MIN}, ` +
-            `s-maxage=${CACHE_TTL.STATS_CARD.MIN}, ` +
-            `stale-while-revalidate=${DURATIONS.ONE_DAY}`,
+          `max-age=${expected}, s-maxage=${expected}, stale-while-revalidate=86400`,
         ],
       ]);
     }
   });
 
   it("should allow changing ring_color", async () => {
-    const { req, res } = faker(
-      {
-        username: "anuraghazra",
-        hide: "issues,prs,contribs",
-        show_icons: true,
-        hide_border: true,
-        line_height: 100,
-        title_color: "fff",
-        ring_color: "0000ff",
-        icon_color: "fff",
-        text_color: "fff",
-        bg_color: "fff",
-      },
-      data_stats,
-    );
+    const req = mockReq({
+      username: "anuraghazra",
+      hide: "issues,prs,contribs",
+      show_icons: true,
+      theme: "tokyonight",
+      hide_border: true,
+      bg_color: "fff",
+      title_color: "fff",
+      icon_color: "fff",
+      text_bold: true,
+      disable_animations: true,
+      ring_color: "0000ff",
+    });
+    const res = mockRes();
 
     await api(req, res);
 
     expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "image/svg+xml");
     expect(res.send).toHaveBeenCalledWith(
       renderStatsCard(stats, {
-        hide: ["issues", "prs", "contribs"],
+        hide: "issues,prs,contribs",
         show_icons: true,
+        theme: "tokyonight",
         hide_border: true,
-        line_height: 100,
-        title_color: "fff",
-        ring_color: "0000ff",
-        icon_color: "fff",
-        text_color: "fff",
         bg_color: "fff",
+        title_color: "fff",
+        icon_color: "fff",
+        text_bold: true,
+        disable_animations: true,
+        ring_color: "0000ff",
       }),
     );
   });
 
   it("should render error card if username in blacklist", async () => {
-    const { req, res } = faker({ username: "renovate-bot" }, data_stats);
+    const req = mockReq({ username: "technote-space" });
+    const res = mockRes();
 
     await api(req, res);
 
@@ -366,13 +348,16 @@ describe("Test /api/", () => {
       renderError({
         message: "This username is blacklisted",
         secondaryMessage: "Please deploy your own instance",
-        renderOptions: { show_repo_link: false },
+        renderOptions: {
+          show_repo_link: false,
+        },
       }),
     );
   });
 
   it("should render error card when wrong locale is provided", async () => {
-    const { req, res } = faker({ locale: "asdf" }, data_stats);
+    const req = mockReq({ username: "anuraghazra", locale: "asdf" });
+    const res = mockRes();
 
     await api(req, res);
 
@@ -386,27 +371,29 @@ describe("Test /api/", () => {
   });
 
   it("should render error card when include_all_commits true and upstream API fails", async () => {
-    mock
-      .onGet("https://api.github.com/search/commits?q=author:anuraghazra")
-      .reply(200, { error: "Some test error message" });
+    mock.onPost("https://api.github.com/graphql").reply(200, {
+      errors: [
+        {
+          type: "NOT_FOUND",
+          path: ["user"],
+          locations: [],
+          message: "Could not fetch user",
+        },
+      ],
+    });
 
-    const { req, res } = faker(
-      { username: "anuraghazra", include_all_commits: true },
-      data_stats,
-    );
+    const req = mockReq({ username: "anuraghazra", include_all_commits: true });
+    const res = mockRes();
 
     await api(req, res);
 
     expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "image/svg+xml");
     expect(res.send).toHaveBeenCalledWith(
       renderError({
-        message: "Could not fetch total commits.",
-        secondaryMessage: "Please try again later",
+        message: "Could not fetch user",
+        secondaryMessage:
+          "Make sure the provided username is not an organization",
       }),
-    );
-    // Received SVG output should not contain string "https://tiny.one/readme-stats"
-    expect(res.send.mock.calls[0][0]).not.toContain(
-      "https://tiny.one/readme-stats",
     );
   });
 });

@@ -10,6 +10,7 @@
 import { request } from "../../src/common/http.js";
 import retryer from "../../src/common/retryer.js";
 import { logger } from "../../src/common/log.js";
+import { guardAccess } from "../../src/common/access.js";
 
 export const RATE_LIMIT_SECONDS = 60 * 5; // 1 request per 5 minutes
 
@@ -84,10 +85,24 @@ export default async (req, res) => {
 
   res.setHeader("Content-Type", "application/json");
 
+  const access = guardAccess({
+    res,
+    id: req.query.username || req.query.id || "",
+    type: "username",
+    colors: {},
+  });
+  if (!access.isPassed) {
+    return access.result;
+  }
+
   try {
     let PATsValid = true;
+    let response;
     try {
-      await retryer(uptimeFetcher, {});
+      response = await retryer(uptimeFetcher, {});
+      if (!response || response.status !== 200) {
+        PATsValid = false;
+      }
     } catch (err) {
       // Resolve eslint no-unused-vars
       err;
@@ -106,19 +121,16 @@ export default async (req, res) => {
 
     switch (type) {
       case "shields":
-        res.send(shieldsUptimeBadge(PATsValid));
-        break;
+        return res.send(shieldsUptimeBadge(PATsValid));
       case "json":
-        res.send({ up: PATsValid });
-        break;
+        return res.send({ up: PATsValid });
       default:
-        res.send(PATsValid);
-        break;
+        return res.send(PATsValid);
     }
   } catch (err) {
     // Return fail boolean if something went wrong.
     logger.error(err);
     res.setHeader("Cache-Control", "no-store");
-    res.send("Something went wrong: " + err.message);
+    return res.send(false);
   }
 };

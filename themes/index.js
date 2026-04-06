@@ -341,8 +341,8 @@ export const themes = {
     bg_color: "252334",
   },
   panda: {
-    title_color: "19f9d899",
-    icon_color: "19f9d899",
+    title_color: "19f9d8",
+    icon_color: "19f9d8",
     text_color: "FF75B5",
     bg_color: "31353a",
   },

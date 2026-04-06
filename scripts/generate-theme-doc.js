@@ -42,9 +42,11 @@ ${REPO_CARD_LINKS_FLAG}
 `;
 
 const createRepoMdLink = (theme) => {
+  // cache_seconds=86400 (24 hours) is set for demo URL caching
   return `\n[${theme}_repo]: https://github-readme-stats.vercel.app/api/pin/?username=anuraghazra&repo=github-readme-stats&cache_seconds=86400&theme=${theme}`;
 };
 const createStatMdLink = (theme) => {
+  // cache_seconds=86400 (24 hours) is set for demo URL caching
   return `\n[${theme}]: https://github-readme-stats.vercel.app/api?username=anuraghazra&show_icons=true&hide=contribs,prs&cache_seconds=86400&theme=${theme}`;
 };
 

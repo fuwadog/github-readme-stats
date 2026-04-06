@@ -26,6 +26,7 @@ const DURATIONS = {
   TWO_DAY: 2 * DAY,
   SIX_DAY: 6 * DAY,
   TEN_DAY: 10 * DAY,
+  STALE_WHILE_REVALIDATE: DAY,
 };
 
 /**
@@ -114,7 +115,7 @@ const setCacheHeaders = (res, cacheSeconds) => {
     "Cache-Control",
     `max-age=${cacheSeconds}, ` +
       `s-maxage=${cacheSeconds}, ` +
-      `stale-while-revalidate=${DURATIONS.ONE_DAY}`,
+      `stale-while-revalidate=${DURATIONS.STALE_WHILE_REVALIDATE}`,
   );
 };
 
@@ -140,7 +141,7 @@ const setErrorCacheHeaders = (res) => {
     "Cache-Control",
     `max-age=${CACHE_TTL.ERROR}, ` +
       `s-maxage=${CACHE_TTL.ERROR}, ` +
-      `stale-while-revalidate=${DURATIONS.ONE_DAY}`,
+      `stale-while-revalidate=${DURATIONS.STALE_WHILE_REVALIDATE}`,
   );
 };
 

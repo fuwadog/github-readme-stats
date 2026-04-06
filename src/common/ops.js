@@ -58,7 +58,7 @@ const clampValue = (number, min, max) => {
  * @param {string} name String to lowercase and trim.
  * @returns {string} Lowercased and trimmed string.
  */
-const lowercaseTrim = (name) => name.toLowerCase().trim();
+const lowercaseTrim = (name) => (name || "").toLowerCase().trim();
 
 /**
  * Split array of languages in two columns.

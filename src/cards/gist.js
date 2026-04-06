@@ -42,7 +42,7 @@ const HEADER_MAX_LENGTH = 35;
  */
 const renderGistCard = (gistData, options = {}) => {
   const { name, nameWithOwner, description, language, starsCount, forksCount } =
-    gistData;
+    gistData || {};
   const {
     title_color,
     icon_color,
@@ -110,7 +110,9 @@ const renderGistCard = (gistData, options = {}) => {
     gap: 25,
   }).join("");
 
-  const header = show_owner ? nameWithOwner : name;
+  const safeName = name || "Gist";
+  const safeNameWithOwner = nameWithOwner || safeName;
+  const header = show_owner ? safeNameWithOwner : safeName;
 
   const card = new Card({
     defaultTitle:

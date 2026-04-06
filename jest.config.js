@@ -9,4 +9,5 @@ export default {
     "<rootDir>/node_modules/",
     "<rootDir>/tests/E2E/",
   ],
+  setupFiles: ["<rootDir>/tests/setup-env.js"],
 };

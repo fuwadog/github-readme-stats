@@ -69,9 +69,17 @@ const fetchTopLanguages = async (
     throw new MissingParamError(["username"]);
   }
 
-  const res = await retryer(fetcher, { login: username });
+  let res;
+  try {
+    res = await retryer(fetcher, { login: username });
+  } catch (err) {
+    throw new CustomError(
+      err.message || "Could not fetch top languages.",
+      CustomError.MAX_RETRY,
+    );
+  }
 
-  if (res.data.errors) {
+  if (res.data.errors && res.data.errors.length > 0) {
     logger.error(res.data.errors);
     if (res.data.errors[0].type === "NOT_FOUND") {
       throw new CustomError(
@@ -91,7 +99,11 @@ const fetchTopLanguages = async (
     );
   }
 
-  let repoNodes = res.data.data.user.repositories.nodes;
+  let repoNodes = res.data.data?.user?.repositories?.nodes;
+
+  if (!repoNodes || repoNodes.length === 0) {
+    return {};
+  }
   /** @type {Record<string, boolean>} */
   let repoToHide = {};
   const allExcludedRepos = [...exclude_repo, ...excludeRepositories];

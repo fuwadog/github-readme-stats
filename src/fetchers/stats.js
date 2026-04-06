@@ -137,7 +137,10 @@ const statsFetcher = async ({
     }
 
     // Store stats data.
-    const repoNodes = res.data.data.user.repositories.nodes;
+    const repoNodes = res.data.data?.user?.repositories?.nodes;
+    if (!repoNodes) {
+      return res;
+    }
     if (stats) {
       stats.data.data.user.repositories.nodes.push(...repoNodes);
     } else {
@@ -148,11 +151,12 @@ const statsFetcher = async ({
     const repoNodesWithStars = repoNodes.filter(
       (node) => node.stargazers.totalCount !== 0,
     );
+    const pageInfo = res.data.data.user.repositories.pageInfo;
     hasNextPage =
       process.env.FETCH_MULTI_PAGE_STARS === "true" &&
       repoNodes.length === repoNodesWithStars.length &&
-      res.data.data.user.repositories.pageInfo.hasNextPage;
-    endCursor = res.data.data.user.repositories.pageInfo.endCursor;
+      pageInfo?.hasNextPage;
+    endCursor = pageInfo?.endCursor;
   }
 
   return stats;
@@ -261,7 +265,7 @@ const fetchStats = async (
   });
 
   // Catch GraphQL errors.
-  if (res.data.errors) {
+  if (res.data.errors && res.data.errors.length > 0) {
     logger.error(res.data.errors);
     if (res.data.errors[0].type === "NOT_FOUND") {
       throw new CustomError(
@@ -281,13 +285,24 @@ const fetchStats = async (
     );
   }
 
-  const user = res.data.data.user;
+  const user = res.data.data?.user;
+
+  if (!user) {
+    throw new CustomError("Could not fetch user.", CustomError.USER_NOT_FOUND);
+  }
 
   stats.name = user.name || user.login;
 
   // if include_all_commits, fetch all commits using the REST API.
   if (include_all_commits) {
-    stats.totalCommits = await totalCommitsFetcher(username);
+    try {
+      stats.totalCommits = await totalCommitsFetcher(username);
+    } catch (err) {
+      throw new CustomError(
+        err.message || "Could not fetch total commits.",
+        err.customErrorType || CustomError.GITHUB_REST_API_ERROR,
+      );
+    }
   } else {
     stats.totalCommits = user.commits.totalCommitContributions;
   }
@@ -295,9 +310,9 @@ const fetchStats = async (
   stats.totalPRs = user.pullRequests.totalCount;
   if (include_merged_pull_requests) {
     stats.totalPRsMerged = user.mergedPullRequests.totalCount;
+    const totalPRs = user.pullRequests.totalCount;
     stats.mergedPRsPercentage =
-      (user.mergedPullRequests.totalCount / user.pullRequests.totalCount) *
-        100 || 0;
+      totalPRs > 0 ? (user.mergedPullRequests.totalCount / totalPRs) * 100 : 0;
   }
   stats.totalReviews = user.reviews.totalPullRequestReviewContributions;
   stats.totalIssues = user.openIssues.totalCount + user.closedIssues.totalCount;

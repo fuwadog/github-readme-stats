@@ -15,7 +15,7 @@ import {
 import { parseBoolean } from "../src/common/ops.js";
 import { renderError } from "../src/common/render.js";
 import { fetchRepo } from "../src/fetchers/repo.js";
-import { isLocaleAvailable } from "../src/translations.js";
+import { isLocaleAvailable, isThemeAvailable } from "../src/translations.js";
 
 // @ts-ignore
 export default async (req, res) => {
@@ -59,6 +59,22 @@ export default async (req, res) => {
       renderError({
         message: "Something went wrong",
         secondaryMessage: "Language not found",
+        renderOptions: {
+          title_color,
+          text_color,
+          bg_color,
+          border_color,
+          theme,
+        },
+      }),
+    );
+  }
+
+  if (theme && !isThemeAvailable(theme)) {
+    return res.send(
+      renderError({
+        message: "Something went wrong",
+        secondaryMessage: "Theme not found",
         renderOptions: {
           title_color,
           text_color,

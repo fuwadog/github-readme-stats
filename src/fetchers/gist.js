@@ -90,23 +90,41 @@ const fetchGist = async (id) => {
   if (!id) {
     throw new MissingParamError(["id"], "/api/gist?id=GIST_ID");
   }
-  const res = await retryer(fetcher, { gistName: id });
-  if (res.data.errors) {
+  let res;
+  try {
+    res = await retryer(fetcher, { gistName: id });
+  } catch (err) {
+    throw new Error(err.message || "Could not fetch gist.");
+  }
+
+  if (res.data.errors && res.data.errors.length > 0) {
     throw new Error(res.data.errors[0].message);
   }
-  if (!res.data.data.viewer.gist) {
+  if (!res.data.data?.viewer?.gist) {
     throw new Error("Gist not found");
   }
   const data = res.data.data.viewer.gist;
+  if (!data.files) {
+    return {
+      name: "Gist",
+      nameWithOwner: "",
+      description: data.description,
+      language: "",
+      starsCount: data.stargazerCount ?? 0,
+      forksCount: data.forks?.totalCount ?? 0,
+    };
+  }
+  const files = Array.isArray(data.files)
+    ? data.files
+    : Object.values(data.files);
+  const firstFile = files?.[0];
   return {
-    name: data.files[Object.keys(data.files)[0]].name,
-    nameWithOwner: `${data.owner.login}/${
-      data.files[Object.keys(data.files)[0]].name
-    }`,
+    name: firstFile?.name || "Gist",
+    nameWithOwner: `${data.owner.login}/${firstFile?.name || "Gist"}`,
     description: data.description,
-    language: calculatePrimaryLanguage(data.files),
-    starsCount: data.stargazerCount,
-    forksCount: data.forks.totalCount,
+    language: calculatePrimaryLanguage(files || []),
+    starsCount: data.stargazerCount ?? 0,
+    forksCount: data.forks?.totalCount ?? 0,
   };
 };
 

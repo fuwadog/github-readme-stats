@@ -23,7 +23,11 @@ const fetchWakatimeStats = async ({ username, api_domain }) => {
 
     return data.data;
   } catch (err) {
-    if (err.response.status < 200 || err.response.status > 299) {
+    if (
+      !err.response ||
+      err.response.status < 200 ||
+      err.response.status > 299
+    ) {
       throw new CustomError(
         `Could not resolve to a User with the login of '${username}'`,
         "WAKATIME_USER_NOT_FOUND",

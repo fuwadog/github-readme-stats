@@ -287,7 +287,7 @@ const renderWakatimeCard = (stats = {}, options = { hide: [] }) => {
     translations: wakatimeCardLocales,
   });
 
-  const lheight = parseInt(String(line_height), 10);
+  const lheight = parseInt(String(line_height ?? DEFAULT_LINE_HEIGHT), 10);
 
   const langsCount = clampValue(langs_count, 1, langs_count);
 

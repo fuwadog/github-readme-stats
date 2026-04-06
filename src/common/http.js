@@ -15,6 +15,7 @@ const request = (data, headers) => {
     method: "post",
     headers,
     data,
+    timeout: 10000,
   });
 };
 

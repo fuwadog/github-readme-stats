@@ -77,11 +77,16 @@ const fetchRepo = async (username, reponame) => {
     throw new MissingParamError(["repo"], urlExample);
   }
 
-  let res = await retryer(fetcher, { login: username, repo: reponame });
+  let res;
+  try {
+    res = await retryer(fetcher, { login: username, repo: reponame });
+  } catch (err) {
+    throw new Error(err.message || "Could not fetch repository.");
+  }
 
   const data = res.data.data;
 
-  if (!data.user && !data.organization) {
+  if (!data || (!data.user && !data.organization)) {
     throw new Error("Not found");
   }
 

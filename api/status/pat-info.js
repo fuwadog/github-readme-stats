@@ -10,6 +10,7 @@
 import { request } from "../../src/common/http.js";
 import { logger } from "../../src/common/log.js";
 import { dateDiff } from "../../src/common/ops.js";
+import { guardAccess } from "../../src/common/access.js";
 
 export const RATE_LIMIT_SECONDS = 60 * 5; // 1 request per 5 minutes
 
@@ -138,8 +139,19 @@ const getPATInfo = async (fetcher, variables) => {
  * @param {any} res The response.
  * @returns {Promise<void>} The response.
  */
-export default async (_, res) => {
+export default async (req, res) => {
   res.setHeader("Content-Type", "application/json");
+
+  const access = guardAccess({
+    res,
+    id: req.query.username || req.query.id || "",
+    type: "username",
+    colors: {},
+  });
+  if (!access.isPassed) {
+    return access.result;
+  }
+
   try {
     // Add header to prevent abuse.
     const PATsInfo = await getPATInfo(uptimeFetcher, {});
@@ -149,11 +161,11 @@ export default async (_, res) => {
         `max-age=0, s-maxage=${RATE_LIMIT_SECONDS}`,
       );
     }
-    res.send(JSON.stringify(PATsInfo, null, 2));
+    return res.send(JSON.stringify(PATsInfo, null, 2));
   } catch (err) {
     // Throw error if something went wrong.
     logger.error(err);
     res.setHeader("Cache-Control", "no-store");
-    res.send("Something went wrong: " + err.message);
+    return res.send("Something went wrong: " + err.message);
   }
 };

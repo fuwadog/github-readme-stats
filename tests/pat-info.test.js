@@ -2,17 +2,18 @@
  * @file Tests for the status/pat-info cloud function.
  */
 
+import { jest } from "@jest/globals";
+
+jest.mock("../src/common/envs.js", () => ({
+  whitelist: ["anuraghazra"],
+  gistWhitelist: [],
+  excludeRepositories: [],
+}));
+
 import dotenv from "dotenv";
 dotenv.config();
 
-import {
-  afterEach,
-  beforeAll,
-  describe,
-  expect,
-  it,
-  jest,
-} from "@jest/globals";
+import { afterEach, beforeAll, describe, expect, it } from "@jest/globals";
 import axios from "axios";
 import MockAdapter from "axios-mock-adapter";
 import patInfo, { RATE_LIMIT_SECONDS } from "../api/status/pat-info.js";
@@ -29,7 +30,7 @@ const successData = {
 
 const faker = (query) => {
   const req = {
-    query: { ...query },
+    query: { username: "anuraghazra", ...query },
   };
   const res = {
     setHeader: jest.fn(),
