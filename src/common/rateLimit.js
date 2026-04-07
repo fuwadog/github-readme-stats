@@ -1,5 +1,14 @@
+/**
+ * In-memory rate limit store using Map().
+ * This approach works fine for local development and Express mode where the server
+ * process persists. However, in serverless environments (e.g., Vercel), each function
+ * invocation runs in an isolated container with its own memory, making this in-memory store ineffective
+ * as it resets on every cold start. For production serverless deployments, consider using
+ * an external rate limiting service or Redis.
+ */
 const rateLimitStore = new Map();
 
+// 100 = default number of requests allowed per rate limit window
 const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX || "100", 10);
 const RATE_LIMIT_WINDOW_MINUTES = parseInt(
   process.env.RATE_LIMIT_WINDOW_MINUTES || "15",

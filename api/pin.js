@@ -16,8 +16,12 @@ import { parseBoolean } from "../src/common/ops.js";
 import { renderError } from "../src/common/render.js";
 import { fetchRepo } from "../src/fetchers/repo.js";
 import { isLocaleAvailable, isThemeAvailable } from "../src/translations.js";
+import { validateUsername } from "../src/common/validation.js";
 
-// @ts-ignore
+/**
+ * Repo pin card API handler.
+ * @type {import('express').RequestHandler}
+ */
 export default async (req, res) => {
   const {
     username,
@@ -37,6 +41,21 @@ export default async (req, res) => {
   } = req.query;
 
   res.setHeader("Content-Type", "image/svg+xml");
+
+  if (!validateUsername(username)) {
+    return res.send(
+      renderError({
+        message: "Invalid username",
+        renderOptions: {
+          title_color,
+          text_color,
+          bg_color,
+          border_color,
+          theme,
+        },
+      }),
+    );
+  }
 
   const access = guardAccess({
     res,

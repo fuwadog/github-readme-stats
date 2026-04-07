@@ -17,7 +17,10 @@ import {
 } from "../src/common/error.js";
 import { parseBoolean } from "../src/common/ops.js";
 
-// @ts-ignore
+/**
+ * Gist card API handler.
+ * @type {import('express').RequestHandler}
+ */
 export default async (req, res) => {
   const {
     id,

@@ -28,3 +28,21 @@ const port = process.env.PORT || process.env.port || 9000;
 app.listen(port, "0.0.0.0", () => {
   console.log(`Server running on port ${port}`);
 });
+
+/**
+ * Express error-handling middleware.
+ * Logs errors and returns a proper JSON error response.
+ * @param {Error} err - The error object.
+ * @param {import("express").Request} req - The request object.
+ * @param {import("express").Response} res - The response object.
+ * @param {import("express").NextFunction} next - The next middleware function.
+ */
+app.use((err, req, res, next) => {
+  console.error("Express error:", err);
+  res.status(err.status || 500).json({
+    error: {
+      message: err.message || "Internal Server Error",
+      status: err.status || 500,
+    },
+  });
+});
