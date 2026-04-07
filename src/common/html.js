@@ -10,10 +10,12 @@
  */
 const encodeHTML = (str) => {
   return str
-    .replace(/[\u00A0-\u9999<>&](?!#)/gim, (i) => {
-      return "&#" + i.charCodeAt(0) + ";";
-    })
-    .replace(/\u0008/gim, "");
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+    .replace(/\u0008/g, "");
 };
 
 export { encodeHTML };

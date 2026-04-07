@@ -9,7 +9,7 @@ const gistWhitelist = process.env.GIST_WHITELIST
   : [];
 
 const excludeRepositories = process.env.EXCLUDE_REPO
-  ? process.env.EXCLUDE_REPO.split(",")
+  ? process.env.EXCLUDE_REPO.split(",").filter((s) => s.trim() !== "")
   : [];
 
 const blacklist = process.env.BLACKLIST

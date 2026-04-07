@@ -36,7 +36,7 @@ const getBadgeSVG = (label, textColor) => `
       text-anchor="middle"
       fill="${textColor}"
     >
-      ${label}
+      ${encodeHTML(label)}
     </text>
   </g>
 `;

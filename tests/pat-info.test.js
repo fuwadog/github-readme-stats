@@ -98,30 +98,12 @@ describe("Test /api/status/pat-info", () => {
     expect(res.send).toHaveBeenCalledWith(
       JSON.stringify(
         {
-          validPATs: ["PAT_2", "PAT_3", "PAT_4"],
-          expiredPATs: [],
-          exhaustedPATs: ["PAT_1"],
-          suspendedPATs: [],
-          errorPATs: [],
-          details: {
-            PAT_1: {
-              status: "exhausted",
-              remaining: 0,
-              resetIn: "0 minutes",
-            },
-            PAT_2: {
-              status: "valid",
-              remaining: 4986,
-            },
-            PAT_3: {
-              status: "valid",
-              remaining: 4986,
-            },
-            PAT_4: {
-              status: "valid",
-              remaining: 4986,
-            },
-          },
+          validCount: 3,
+          expiredCount: 0,
+          exhaustedCount: 1,
+          suspendedCount: 0,
+          errorCount: 0,
+          total: 4,
         },
         null,
         2,
@@ -146,32 +128,12 @@ describe("Test /api/status/pat-info", () => {
     expect(res.send).toHaveBeenCalledWith(
       JSON.stringify(
         {
-          validPATs: ["PAT_2", "PAT_3", "PAT_4"],
-          expiredPATs: [],
-          exhaustedPATs: [],
-          suspendedPATs: [],
-          errorPATs: ["PAT_1"],
-          details: {
-            PAT_1: {
-              status: "error",
-              error: {
-                type: "SOME_ERROR",
-                message: "This is a error",
-              },
-            },
-            PAT_2: {
-              status: "valid",
-              remaining: 4986,
-            },
-            PAT_3: {
-              status: "valid",
-              remaining: 4986,
-            },
-            PAT_4: {
-              status: "valid",
-              remaining: 4986,
-            },
-          },
+          validCount: 3,
+          expiredCount: 0,
+          exhaustedCount: 0,
+          suspendedCount: 0,
+          errorCount: 1,
+          total: 4,
         },
         null,
         2,
@@ -196,28 +158,12 @@ describe("Test /api/status/pat-info", () => {
     expect(res.send).toHaveBeenCalledWith(
       JSON.stringify(
         {
-          validPATs: ["PAT_2", "PAT_3", "PAT_4"],
-          expiredPATs: ["PAT_1"],
-          exhaustedPATs: [],
-          suspendedPATs: [],
-          errorPATs: [],
-          details: {
-            PAT_1: {
-              status: "expired",
-            },
-            PAT_2: {
-              status: "valid",
-              remaining: 4986,
-            },
-            PAT_3: {
-              status: "valid",
-              remaining: 4986,
-            },
-            PAT_4: {
-              status: "valid",
-              remaining: 4986,
-            },
-          },
+          validCount: 3,
+          expiredCount: 1,
+          exhaustedCount: 0,
+          suspendedCount: 0,
+          errorCount: 0,
+          total: 4,
         },
         null,
         2,

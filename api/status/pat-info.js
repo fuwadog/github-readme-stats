@@ -161,7 +161,25 @@ export default async (req, res) => {
         `max-age=0, s-maxage=${RATE_LIMIT_SECONDS}`,
       );
     }
-    return res.send(JSON.stringify(PATsInfo, null, 2));
+    return res.send(
+      JSON.stringify(
+        {
+          validCount: PATsInfo.validPATs.length,
+          expiredCount: PATsInfo.expiredPATs.length,
+          exhaustedCount: PATsInfo.exhaustedPATs.length,
+          suspendedCount: PATsInfo.suspendedPATs.length,
+          errorCount: PATsInfo.errorPATs.length,
+          total:
+            PATsInfo.validPATs.length +
+            PATsInfo.expiredPATs.length +
+            PATsInfo.exhaustedPATs.length +
+            PATsInfo.suspendedPATs.length +
+            PATsInfo.errorPATs.length,
+        },
+        null,
+        2,
+      ),
+    );
   } catch (err) {
     // Throw error if something went wrong.
     logger.error(err);

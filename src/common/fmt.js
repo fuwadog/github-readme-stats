@@ -61,6 +61,9 @@ const formatBytes = (bytes) => {
  * @returns {string[]} Array of lines.
  */
 const wrapTextMultiline = (text, width = 59, maxLines = 3) => {
+  if (!text) {
+    return [""];
+  }
   const fullWidthComma = "，";
   const encoded = encodeHTML(text);
   const isChinese = encoded.includes(fullWidthComma);

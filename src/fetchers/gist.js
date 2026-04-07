@@ -66,7 +66,7 @@ const calculatePrimaryLanguage = (files) => {
     }
   }
 
-  let primaryLanguage = Object.keys(languages)[0];
+  let primaryLanguage = Object.keys(languages)[0] || "Unknown";
   for (const language in languages) {
     if (languages[language] > languages[primaryLanguage]) {
       primaryLanguage = language;

@@ -45,11 +45,11 @@ const parseArray = (str) => {
  * @returns {number} The clamped number.
  */
 const clampValue = (number, min, max) => {
-  // @ts-ignore
-  if (Number.isNaN(parseInt(number, 10))) {
+  const num = Number(number);
+  if (!Number.isFinite(num)) {
     return min;
   }
-  return Math.max(min, Math.min(number, max));
+  return Math.max(min, Math.min(num, max));
 };
 
 /**

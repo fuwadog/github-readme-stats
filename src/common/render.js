@@ -28,7 +28,8 @@ const CHAR_WIDTH_AVG = 0.5279276315789471;
 const ERROR_CARD_LENGTH = 576.5;
 
 const ERROR_CARD_URL =
-  process.env.ERROR_CARD_URL || "https://tiny.one/readme-stats";
+  process.env.ERROR_CARD_URL ||
+  "https://github.com/anuraghazra/github-readme-stats#readme";
 
 /**
  * Auto layout utility, allows us to layout things vertically or horizontally with
@@ -202,7 +203,7 @@ const renderError = ({
     }</text>
     <text data-testid="message" x="25" y="55" class="text small">
       <tspan x="25" dy="18">${encodeHTML(message)}</tspan>
-      <tspan x="25" dy="18" class="gray">${secondaryMessage}</tspan>
+      <tspan x="25" dy="18" class="gray">${encodeHTML(secondaryMessage)}</tspan>
     </text>
     </svg>
   `;

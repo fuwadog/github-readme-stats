@@ -450,7 +450,9 @@ const renderStatsCard = (stats, options = {}) => {
   );
 
   // the lower the user's percentile the better
-  const progress = 100 - rank.percentile;
+  const progress = Number.isFinite(100 - rank.percentile)
+    ? 100 - rank.percentile
+    : 0;
   const cssStyles = getStyles({
     titleColor,
     ringColor,

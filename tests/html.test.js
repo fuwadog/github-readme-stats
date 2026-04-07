@@ -4,7 +4,25 @@ import { encodeHTML } from "../src/common/html.js";
 describe("Test html.js", () => {
   it("should test encodeHTML", () => {
     expect(encodeHTML(`<html>hello world<,.#4^&^@%!))`)).toBe(
-      "&#60;html&#62;hello world&#60;,.#4^&#38;^@%!))",
+      "&lt;html&gt;hello world&lt;,.#4^&amp;^@%!))",
     );
+  });
+
+  it("should escape double quotes", () => {
+    expect(encodeHTML('a"b')).toBe("a&quot;b");
+  });
+
+  it("should escape single quotes", () => {
+    expect(encodeHTML("a'b")).toBe("a&#39;b");
+  });
+
+  it("should escape XSS payloads", () => {
+    expect(encodeHTML('<script>alert("xss")</script>')).toBe(
+      "&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;",
+    );
+  });
+
+  it("should escape event handler attributes", () => {
+    expect(encodeHTML('onload="alert(1)"')).toBe("onload=&quot;alert(1)&quot;");
   });
 });

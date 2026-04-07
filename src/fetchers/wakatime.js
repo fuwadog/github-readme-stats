@@ -23,17 +23,22 @@ const fetchWakatimeStats = async ({ username, api_domain }) => {
 
     return data.data;
   } catch (err) {
-    if (
-      !err.response ||
-      err.response.status < 200 ||
-      err.response.status > 299
-    ) {
+    if (err.response?.status === 404) {
       throw new CustomError(
-        `Could not resolve to a User with the login of '${username}'`,
+        `WakaTime user not found: '${username}'`,
         "WAKATIME_USER_NOT_FOUND",
       );
     }
-    throw err;
+    if (err.response?.status === 401) {
+      throw new CustomError(
+        "WakaTime API authentication failed",
+        "WAKATIME_AUTH_FAILED",
+      );
+    }
+    throw new CustomError(
+      `WakaTime API error: ${err.message || "Unknown error"}`,
+      "WAKATIME_API_ERROR",
+    );
   }
 };
 

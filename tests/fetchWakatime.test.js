@@ -127,7 +127,7 @@ describe("WakaTime fetcher", () => {
     mock.onGet(/\/https:\/\/wakatime\.com\/api/).reply(404, wakaTimeData);
 
     await expect(fetchWakatimeStats({ username: "noone" })).rejects.toThrow(
-      "Could not resolve to a User with the login of 'noone'",
+      "WakaTime user not found: 'noone'",
     );
   });
 });

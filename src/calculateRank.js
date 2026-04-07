@@ -85,7 +85,9 @@ function calculateRank({
 
   const percentile = Math.max(0, Math.min(100, rank * 100));
   const thresholdIndex = THRESHOLDS.findIndex((t) => percentile <= t);
-  const level = LEVELS[Math.max(0, thresholdIndex)];
+  // thresholdIndex is always >= 0 since percentile is clamped to [0, 100]
+  // and THRESHOLDS ends with 100
+  const level = LEVELS[thresholdIndex];
 
   return { level, percentile };
 }

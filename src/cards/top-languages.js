@@ -3,6 +3,7 @@
 import { Card } from "../common/Card.js";
 import { getCardColors } from "../common/color.js";
 import { formatBytes } from "../common/fmt.js";
+import { encodeHTML } from "../common/html.js";
 import { I18n } from "../common/I18n.js";
 import { chunkArray, clampValue, lowercaseTrim } from "../common/ops.js";
 import {
@@ -245,7 +246,7 @@ const createProgressTextNode = ({
 
   return `
     <g class="stagger" style="animation-delay: ${staggerDelay}ms">
-      <text data-testid="lang-name" x="2" y="15" class="lang-name">${name}</text>
+      <text data-testid="lang-name" x="2" y="15" class="lang-name">${encodeHTML(name)}</text>
       <text x="${progressTextX}" y="34" class="lang-name">${displayValue}</text>
       ${createProgressNode({
         x: 0,
@@ -288,7 +289,7 @@ const createCompactLangNode = ({
     <g class="stagger" style="animation-delay: ${staggerDelay}ms">
       <circle cx="5" cy="6" r="5" fill="${color}" />
       <text data-testid="lang-name" x="15" y="10" class='lang-name'>
-        ${lang.name} ${hideProgress ? "" : displayValue}
+        ${encodeHTML(lang.name)} ${hideProgress ? "" : displayValue}
       </text>
     </g>
   `;
@@ -741,11 +742,9 @@ const renderDonutLayout = (langs, width, totalLanguageSize, statsFormat) => {
  * @param {Layout | undefined} props.layout Card layout.
  * @returns {string} No languages data SVG node string.
  */
-const noLanguagesDataNode = ({ color, text, layout }) => {
+const noLanguagesDataNode = ({ color, text }) => {
   return `
-    <text x="${
-      layout === "pie" || layout === "donut-vertical" ? CARD_PADDING : 0
-    }" y="11" class="stat bold" fill="${color}">${text}</text>
+    <text x="${CARD_PADDING}" y="11" class="stat bold" fill="${color}">${encodeHTML(text)}</text>
   `;
 };
 

@@ -137,8 +137,8 @@ export default async (req, res) => {
     const topLangs = await fetchTopLanguages(
       username,
       parseArray(exclude_repo),
-      size_weight,
-      count_weight,
+      parseFloat(size_weight) || 1,
+      parseFloat(count_weight) || 0,
     );
     const cacheSeconds = resolveCacheSeconds({
       requested: parseInt(cache_seconds, 10),
