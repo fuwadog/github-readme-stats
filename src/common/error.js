@@ -1,5 +1,7 @@
 // @ts-check
 
+import { generateCorrelationId } from "./logger.js";
+
 /**
  * @type {string} A general message to ask user to try again later.
  */
@@ -20,19 +22,56 @@ const SECONDARY_ERROR_MESSAGES = {
 };
 
 /**
- * Custom error class to handle custom GRS errors.
+ * Custom error class to handle custom GRS errors with correlation IDs and retryable status.
  */
 class CustomError extends Error {
   /**
    * Custom error constructor.
    *
-   * @param {string} message Error message.
-   * @param {string} type Error type.
+   * @param {string} message - Error message.
+   * @param {string} type - Error type.
+   * @param {string} [correlationId] - Optional correlation ID for tracking.
    */
-  constructor(message, type) {
+  constructor(message, type, correlationId = undefined) {
     super(message);
     this.type = type;
+    this.correlationId = correlationId || generateCorrelationId();
     this.secondaryMessage = SECONDARY_ERROR_MESSAGES[type] || type;
+    this.timestamp = new Date().toISOString();
+    this.isRetryable = this.checkRetryable(type);
+  }
+
+  /**
+   * Check if error is retryable based on type.
+   *
+   * @param {string} type - Error type.
+   * @returns {boolean} True if retryable.
+   */
+  checkRetryable(type) {
+    const retryableTypes = [
+      CustomError.GRAPHQL_ERROR,
+      CustomError.GITHUB_REST_API_ERROR,
+      CustomError.MAX_RETRY,
+    ];
+    return retryableTypes.includes(type);
+  }
+
+  /**
+   * Get error response object for API responses.
+   *
+   * @returns {Object} Error response object.
+   */
+  toResponse() {
+    return {
+      error: {
+        message: this.message,
+        type: this.type,
+        correlationId: this.correlationId,
+        timestamp: this.timestamp,
+        secondaryMessage: this.secondaryMessage,
+        isRetryable: this.isRetryable,
+      },
+    };
   }
 
   static MAX_RETRY = "MAX_RETRY";

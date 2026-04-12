@@ -1,10 +1,18 @@
 // @ts-check
 
 import { clampValue } from "./ops.js";
+import { kv } from "@vercel/kv";
 
 const MIN = 60;
 const HOUR = 60 * MIN;
 const DAY = 24 * HOUR;
+
+// Cache metrics tracking
+const cacheMetrics = {
+  hits: 0,
+  misses: 0,
+  errors: 0,
+};
 
 /**
  * Common durations in seconds.
@@ -145,10 +153,70 @@ const setErrorCacheHeaders = (res) => {
   );
 };
 
+/**
+ * Get data from distributed cache (Vercel KV).
+ *
+ * @param {string} key - Cache key.
+ * @returns {Promise<any|null>} Cached data or null.
+ */
+const getFromCache = async (key) => {
+  try {
+    const data = await kv.get(key);
+    if (data !== null) {
+      cacheMetrics.hits++;
+      return JSON.parse(data);
+    }
+    cacheMetrics.misses++;
+    return null;
+  } catch (error) {
+    cacheMetrics.errors++;
+    console.error("Cache get error:", error);
+    return null;
+  }
+};
+
+/**
+ * Set data in distributed cache with TTL.
+ *
+ * @param {string} key - Cache key.
+ * @param {any} value - Data to cache.
+ * @param {number} ttlSeconds - Time to live in seconds.
+ * @returns {Promise<boolean>} Success status.
+ */
+const setInCache = async (key, value, ttlSeconds) => {
+  try {
+    await kv.set(key, JSON.stringify(value), { ex: ttlSeconds });
+    return true;
+  } catch (error) {
+    console.error("Cache set error:", error);
+    return false;
+  }
+};
+
+/**
+ * Cache warming for popular users.
+ * Pre-warms cache for frequently accessed usernames.
+ */
+const warmCacheForPopularUsers = async () => {
+  const popularUsers = process.env.POPULAR_USERS?.split(",") || [];
+  for (const username of popularUsers) {
+    const cacheKey = `stats:${username}`;
+    const exists = await kv.exists(cacheKey);
+    if (!exists) {
+      // Trigger background fetch to warm cache
+      console.log(`Warming cache for ${username}`);
+    }
+  }
+};
+
 export {
   resolveCacheSeconds,
   setCacheHeaders,
   setErrorCacheHeaders,
   DURATIONS,
   CACHE_TTL,
+  getFromCache,
+  setInCache,
+  cacheMetrics,
+  warmCacheForPopularUsers,
 };

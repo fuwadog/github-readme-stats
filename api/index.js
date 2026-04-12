@@ -17,12 +17,41 @@ import { renderError } from "../src/common/render.js";
 import { fetchStats } from "../src/fetchers/stats.js";
 import { isLocaleAvailable, isThemeAvailable } from "../src/translations.js";
 import { validateUsername } from "../src/common/validation.js";
+import { statsCardSchema } from "../src/common/validationMiddleware.js";
 
 /**
  * Stats card API handler.
  * @type {import('express').RequestHandler}
  */
 export default async (req, res) => {
+  res.setHeader("Content-Type", "image/svg+xml");
+
+  // Validate request parameters
+  const validationResult = statsCardSchema.safeParse(req.query);
+  if (!validationResult.success) {
+    const firstError = validationResult.error.issues[0];
+    return res.send(
+      renderError({
+        message: "Invalid request parameters",
+        secondaryMessage: `${firstError.path.join(".")}: ${firstError.message}`,
+        renderOptions: {
+          // @ts-ignore - Pre-existing type issues in codebase
+          title_color: req.query.title_color,
+          // @ts-ignore - Pre-existing type issues in codebase
+          text_color: req.query.text_color,
+          // @ts-ignore - Pre-existing type issues in codebase
+          bg_color: req.query.bg_color,
+          // @ts-ignore - Pre-existing type issues in codebase
+          border_color: req.query.border_color,
+          // @ts-ignore - Pre-existing type issues in codebase
+          theme: req.query.theme,
+        },
+      }),
+    );
+  }
+
+  // Use validated query parameters
+  const query = validationResult.data;
   const {
     username,
     hide,
@@ -52,8 +81,7 @@ export default async (req, res) => {
     border_color,
     rank_icon,
     show,
-  } = req.query;
-  res.setHeader("Content-Type", "image/svg+xml");
+  } = query;
 
   if (!validateUsername(username)) {
     return res.send(

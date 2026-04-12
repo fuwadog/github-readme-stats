@@ -94,7 +94,10 @@ const error = {
 const mockRes = () => {
   const res = {};
   res.send = jest.fn((val) => val);
-  res.setHeader = jest.fn((key, val) => val);
+  res.setHeader = jest.fn((key, val) => {
+    res[key] = val;
+    return res;
+  });
   return res;
 };
 
